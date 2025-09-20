@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Student Dashboard – HAFEDPOLY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  *{box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;margin:0;padding:0;}
+  body{min-height:100vh;background:#007bff;overflow-x:hidden;color:#333;position:relative;}
+  
+  /* Particle canvas */
+  #networkCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+
+  header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000}
+  header h1{font-size:20px;color:#007bff;}
+  .hamburger{width:28px;height:20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;}
+  .hamburger span{display:block;height:3px;background:#007bff;border-radius:2px;transition:.3s;}
+  .hamburger.active span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+  .hamburger.active span:nth-child(2){opacity:0;}
+  .hamburger.active span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+  
+  nav{position:fixed;top:0;right:-250px;width:220px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.15);padding:20px;transition:.3s;z-index:999;}
+  nav.active{right:0;}
+  nav a{display:block;margin:14px 0;color:#007bff;text-decoration:none;font-weight:600;}
+
+  .container{padding:20px;max-width:1000px;margin:0 auto;}
+  .box{background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 6px 20px rgba(0,0,0,.15);}
+  h2{margin-bottom:12px;color:#007bff;}
+  p{margin:6px 0;color:#444;}
+  button{padding:10px 16px;border:none;border-radius:8px;background:#007bff;color:#fff;font-weight:600;cursor:pointer;}
+  button:hover{background:#005ecb;}
+  
+  .profile-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .profile-img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid #e6f3ff;background:#f0f6ff;}
+  .profile-info{flex:1;min-width:220px;}
+  .small{font-size:13px;color:#666;margin-top:6px;}
+  .img-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  .btn-ghost{background:transparent;border:1px solid #ddd;color:#007bff;padding:8px 12px;border-radius:8px;cursor:pointer;}
+  .btn-danger{background:#dc3545;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
+
+  /* Modal */
+  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:2000;}
+  .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  .modal-content h3{margin-top:0;color:#007bff;}
+  .modal-content label{display:block;margin:10px 0 5px;font-weight:600;}
+  .modal-content input{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;}
+  .modal-content input:focus{border-color:#007bff;outline:none;box-shadow:0 0 0 3px rgba(0,123,255,.2);}
+  .modal-actions{margin-top:16px;text-align:right;}
+  .modal-actions button{margin-left:8px;}
+  .alert{padding:10px;margin-top:10px;border-radius:6px;font-weight:600;display:none;}
+  .alert.success{background:#d4edda;color:#155724;}
+  .alert.error{background:#f8d7da;color:#721c24;}
+</style>
+</head>
+<body>
+
+<canvas id="networkCanvas"></canvas>
+
+<header>
+  <h1>Student Dashboard</h1>
+  <div class="hamburger" id="hamburger" title="Menu"><span></span><span></span><span></span></div>
+</header>
+
+<nav id="nav">
+  <a href="#profile">Profile</a>
+  <a href="submit-complaint.html">Submit Complaint</a>
+  <a href="submit-suggestion.html">Submit Suggestion</a>
+  <a href="student-submission.html">My Submissions</a>
+  <a href="#" id="logoutLink">Logout</a>
+</nav>
+
+<div class="container">
+  <!-- Profile Section -->
+  <div class="box" id="profile">
+    <h2>My Profile</h2>
+    <div class="profile-row">
+      <div>
+        <img id="sPic" class="profile-img" src="https://via.placeholder.com/240x240.png?text=No+Photo" alt="Profile picture">
+        <div class="img-actions">
+          <button class="btn-ghost" id="addPhotoBtn">Add Photo</button>
+          <button class="btn-ghost" id="changePhotoBtn" style="display:none">Change Photo</button>
+          <button class="btn-danger" id="removePhotoBtn" style="display:none">Remove Photo</button>
+          <input type="file" id="uploadPic" accept="image/*" style="display:none">
+        </div>
+      </div>
+      <div class="profile-info">
+        <p><strong>Name:</strong> <span id="sname"></span></p>
+        <p><strong>Email:</strong> <span id="semail"></span></p>
+        <p><strong>Reg No:</strong> <span id="sregno"></span></p>
+        <p><strong>Level:</strong> <span id="slevel"></span></p>
+        <p><strong>Department:</strong> <span id="sdept"></span></p>
+        <p><strong>Unique ID:</strong> <span id="suid"></span></p>
+        <p class="small">Only name, email, picture can be changed here. Reg No is fixed.</p>
+        <div style="margin-top:12px">
+          <button id="editProfileBtn">Edit Profile</button>
+          <button id="changePasswordBtn" style="margin-left:8px;">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcements Section -->
+  <div class="box" id="announcements">
+    <h2>Announcements</h2>
+    <div id="annList">Loading...</div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-content">
+    <h3>Edit Profile</h3>
+    <label for="editName">Full Name</label>
+    <input type="text" id="editName">
+    <label for="editEmail">Email</label>
+    <input type="email" id="editEmail">
+    <label for="editConfirmPass">Confirm Password</label>
+    <input type="password" id="editConfirmPass" placeholder="Enter current password to change email">
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelEdit">Cancel</button>
+      <button id="saveEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal" id="passwordModal">
+  <div class="modal-content">
+    <h3>Change Password</h3>
+    <label for="oldPass">Old Password</label>
+    <input type="password" id="oldPass">
+    <label for="newPass">New Password</label>
+    <input type="password" id="newPass">
+    <label for="confirmPass">Confirm New Password</label>
+    <input type="password" id="confirmPass">
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelPassword">Cancel</button>
+      <button id="savePassword">Update</button>
+    </div>
+    <div class="alert success" id="successMsg">Password updated successfully ✅</div>
+    <div class="alert error" id="errorMsg"></div>
+  </div>
+</div>
+<canvas id="bgCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;"></canvas>
+
+<script>
+// --- Particle Background ---
+const canvas = document.getElementById("bgCanvas");
+const ctx = canvas.getContext("2d");
+
+let particles = [];
+const particleCount = 80;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+function random(min, max) { return Math.random() * (max - min) + min; }
+
+class Particle {
+    constructor() {
+        this.x = random(0, canvas.width);
+        this.y = random(0, canvas.height);
+        this.radius = random(2, 5);
+        this.speedX = random(-0.5, 0.5);
+        this.speedY = random(-0.5, 0.5);
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if(this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if(this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.fill();
+    }
+}
+
+// Init particles
+for(let i=0;i<particleCount;i++) particles.push(new Particle());
+
+function animateParticles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    // Draw lines between close particles
+    for(let i=0;i<particles.length;i++){
+        for(let j=i+1;j<particles.length;j++){
+            let dx = particles[i].x - particles[j].x;
+            let dy = particles[i].y - particles[j].y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 120){
+                ctx.beginPath();
+                ctx.strokeStyle = "rgba(255,255,255,"+(1-dist/120)*0.3+")";
+                ctx.lineWidth = 1;
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.stroke();
+            }
+        }
+    }
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// --- Helper function ---
+const $ = id => document.getElementById(id);
+
+// --- Hamburger menu toggle ---
+const hamburger = $("hamburger");
+const nav = $("nav");
+hamburger.addEventListener("click", () => {
+    hamburger.classList.toggle("active");
+    nav.classList.toggle("active");
+});
+
+// --- Local Storage Helpers ---
+function getActiveStudent() { return JSON.parse(localStorage.getItem("activeStudent") || "null"); }
+function saveActiveStudent(student){
+    localStorage.setItem("activeStudent", JSON.stringify(student));
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+    const idx = users.findIndex(u => u.regno === student.regno);
+    if(idx > -1) users[idx] = {...users[idx], ...student};
+    else users.push(student);
+    localStorage.setItem("users", JSON.stringify(users));
+}
+
+// --- Profile Handling ---
+function loadProfile() {
+    const active = getActiveStudent();
+    if(!active) { alert("Session expired. Please log in."); location.href="login.html"; return; }
+
+    $("sname").textContent = active.name || "";
+    $("semail").textContent = active.email || "";
+    $("sregno").textContent = active.regno || "";
+    $("slevel").textContent = active.level || "";
+    $("sdept").textContent = active.department || "";
+    $("suid").textContent = active.uniqueId || "N/A";
+
+    if(active.pic) {
+        $("sPic").src = active.pic;
+        $("addPhotoBtn").style.display = "none";
+        $("changePhotoBtn").style.display = "inline-block";
+        $("removePhotoBtn").style.display = "inline-block";
+    } else {
+        $("sPic").src = "https://via.placeholder.com/240x240.png?text=No+Photo";
+        $("addPhotoBtn").style.display = "inline-block";
+        $("changePhotoBtn").style.display = "none";
+        $("removePhotoBtn").style.display = "none";
+    }
+}
+
+// --- Photo Upload ---
+const uploadInput = $("uploadPic");
+$("addPhotoBtn").onclick = $("changePhotoBtn").onclick = () => uploadInput.click();
+uploadInput.onchange = e => {
+    const file = e.target.files[0]; uploadInput.value="";
+    if(!file || !file.type.startsWith("image/")) { alert("Select a valid image."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+        $("sPic").src = reader.result;
+        const active = getActiveStudent();
+        active.pic = reader.result;
+        saveActiveStudent(active);
+    };
+    reader.readAsDataURL(file);
+};
+
+$("removePhotoBtn").onclick = () => {
+    if(!confirm("Remove profile photo?")) return;
+    const active = getActiveStudent();
+    if(!active) return;
+    active.pic = "";
+    saveActiveStudent(active);
+    loadProfile();
+};
+
+// --- Edit Profile Modal ---
+const editModal = $("editProfileModal");
+$("editProfileBtn").onclick = () => {
+    const active = getActiveStudent();
+    $("editName").value = active.name || "";
+    $("editEmail").value = active.email || "";
+    $("editConfirmPass").value = "";
+    editModal.style.display = "flex";
+};
+$("cancelEdit").onclick = () => editModal.style.display = "none";
+$("saveEdit").onclick = () => {
+    const active = getActiveStudent();
+    const newName = $("editName").value.trim();
+    const newEmail = $("editEmail").value.trim();
+    const confirmPass = $("editConfirmPass").value.trim();
+
+    if(newEmail !== active.email && confirmPass !== active.password){
+        alert("Password confirmation required to change email."); return;
+    }
+
+    active.name = newName || active.name;
+    active.email = newEmail || active.email;
+    saveActiveStudent(active);
+    loadProfile();
+    editModal.style.display = "none";
+
+    alert("Profile updated. You will be logged out for security.");
+    localStorage.removeItem("activeStudent");
+    location.href = "login.html";
+};
+
+// --- Change Password Modal ---
+const passModal = $("passwordModal");
+$("changePasswordBtn").onclick = () => passModal.style.display = "flex";
+$("cancelPassword").onclick = () => passModal.style.display = "none";
+
+$("savePassword").onclick = () => {
+    const active = getActiveStudent();
+    const oldPass = $("oldPass").value.trim();
+    const newPass = $("newPass").value.trim();
+    const confirmPass = $("confirmPass").value.trim();
+
+    $("successMsg").style.display = "none"; 
+    $("errorMsg").style.display = "none";
+
+    if(oldPass !== active.password){
+        $("errorMsg").innerText = "❌ Old password is incorrect";
+        $("errorMsg").style.display = "block"; return;
+    }
+    if(newPass !== confirmPass){
+        $("errorMsg").innerText = "❌ New passwords do not match";
+        $("errorMsg").style.display = "block"; return;
+    }
+    if(newPass.length < 6 || newPass.length > 12){
+        $("errorMsg").innerText = "❌ Password must be 6-12 characters";
+        $("errorMsg").style.display = "block"; return;
+    }
+
+    active.password = newPass;
+    saveActiveStudent(active);
+    $("successMsg").style.display = "block";
+
+    setTimeout(() => {
+        alert("Password updated. You will be logged out for security.");
+        localStorage.removeItem("activeStudent");
+        location.href = "login.html";
+    }, 800);
+};
+
+// --- Announcements ---
+function loadAnnouncements(){
+    const annList = $("annList");
+    const anns = JSON.parse(localStorage.getItem("announcements") || "[]");
+    if(anns.length === 0){ annList.innerHTML = "<p>No announcements at the moment.</p>"; return; }
+    annList.innerHTML = anns.map(a => `
+        <div style="margin-bottom:12px;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fafafa;">
+            <strong>${a.title}</strong><br>
+            <small>${a.date}</small>
+            <p>${a.desc}</p>
+        </div>
+    `).join("");
+}
+
+// --- Logout ---
+$("logoutLink").onclick = e => { e.preventDefault(); localStorage.removeItem("activeStudent"); location.href = "login.html"; };
+
+// --- Initialize ---
+loadProfile();
+loadAnnouncements();
+
+</script>
+</body>
+</html>

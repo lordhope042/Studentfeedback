@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Complaints – HAFEDPOLY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;}
+body{margin:0;background:#eef2f7;color:#333;}
+
+/* Header */
+header{display:flex;justify-content:space-between;align-items:center;
+  padding:16px 24px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  position:sticky;top:0;z-index:1000;}
+header h1{margin:0;color:#007bff;font-size:1.4rem;}
+.hamburger{width:28px;height:20px;display:flex;flex-direction:column;
+  justify-content:space-between;cursor:pointer;z-index:1300;}
+.hamburger span{display:block;height:3px;background:#007bff;border-radius:2px;transition:.3s;}
+.hamburger.active span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+.hamburger.active span:nth-child(2){opacity:0;}
+.hamburger.active span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+
+/* Overlay */
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.3);z-index:1100;display:none;}
+#overlay.active{display:block;animation:fadeIn .3s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* Side nav */
+nav{position:fixed;top:0;right:-250px;width:220px;height:100%;
+  background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.15);
+  padding:20px;transition:.3s;z-index:1200;}
+nav.active{right:0;}
+nav a{display:block;margin:14px 0;color:#007bff;text-decoration:none;
+  font-weight:600;transition:.3s;}
+nav a:hover{color:#0056b3;}
+
+/* Content */
+.container{padding:20px;max-width:1200px;margin:20px auto;}
+.top-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;}
+input,select{padding:10px 14px;border:1px solid #ccc;border-radius:8px;
+  transition:.3s;}
+input{width:280px;max-width:100%;}
+input:focus,select:focus{border-color:#007bff;box-shadow:0 0 0 4px rgba(0,123,255,.12);outline:none;}
+
+/* Table */
+.table-wrapper{overflow-x:auto;background:#fff;border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);}
+table{width:100%;border-collapse:collapse;min-width:900px;}
+th,td{padding:14px 12px;text-align:left;border-bottom:1px solid #eee;}
+th{background:#007bff;color:#fff;text-transform:uppercase;
+  font-size:0.85rem;letter-spacing:.5px;}
+tr{transition:.2s;}
+tr:hover td{background:#f9fbff;}
+
+/* Action buttons */
+td.actions{white-space:nowrap;}
+td.actions button{margin-right:6px;padding:6px 12px;border:none;
+  border-radius:6px;color:#fff;cursor:pointer;font-weight:600;
+  font-size:0.85rem;transition:.3s;}
+.btn-verify{background:#6c757d;}
+.btn-resolve{background:#28a745;}
+.btn-delete{background:#dc3545;}
+.btn-verify:hover{background:#5a6268;}
+.btn-resolve:hover{background:#218838;}
+.btn-delete:hover{background:#c82333;}
+button:disabled{opacity:.6;cursor:not-allowed;}
+
+/* Status badges */
+.status{font-weight:600;padding:6px 12px;border-radius:20px;
+  display:inline-block;font-size:0.8rem;}
+.status.Pending{background:#dc3545;color:#fff;}
+.status.Verified{background:#ffc107;color:#000;}
+.status.Resolved{background:#28a745;color:#fff;}
+
+/* Responsive */
+@media(max-width:768px){
+  header h1{font-size:1.2rem;}
+  .top-bar{flex-direction:column;align-items:stretch;}
+  input,select{width:100%;}
+  th,td{padding:10px 8px;font-size:0.85rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Admin Complaints</h1>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</header>
+
+<div id="overlay"></div>
+
+<nav id="nav">
+  <a href="admin-dashboard.html">Dashboard</a>
+  <a href="admin-complaint.html">Complaints</a>
+  <a href="admin-suggestion.html">Suggestions</a>
+    <a href="admin-verify.html">Verify IDs</a>
+  <a href="admin-announcement.html">Announcements</a>
+  <a href="admin-report.html">Admin Report</a>
+  <a href="#" id="logoutLink">Logout</a>
+</nav>
+
+<div class="container">
+  <div class="top-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search by ID, Student ID, Reg No">
+    <select id="sortSelect">
+      <option value="newest">Sort by Newest</option>
+      <option value="oldest">Sort by Oldest</option>
+    </select>
+  </div>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Complaint ID</th>
+          <th>Category</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Student ID</th>
+          <th>Reg No</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const hamburger = $("hamburger"), nav = $("nav"), overlay = $("overlay");
+
+// Toggle nav
+hamburger.onclick = e => {
+  e.stopPropagation();
+  hamburger.classList.toggle("active");
+  nav.classList.toggle("active");
+  overlay.classList.toggle("active");
+};
+
+// Close nav on link click
+nav.querySelectorAll("a").forEach(link => {
+  link.onclick = () => {
+    hamburger.classList.remove("active");
+    nav.classList.remove("active");
+    overlay.classList.remove("active");
+  };
+});
+
+// Close nav on outside click
+overlay.onclick = () => {
+  hamburger.classList.remove("active");
+  nav.classList.remove("active");
+  overlay.classList.remove("active");
+};
+
+// Logout
+$("logoutLink").onclick = e => {
+  e.preventDefault();
+  localStorage.removeItem("activeStudent");
+  location.href = "login.html";
+};
+
+// Format status badges
+function formatStatus(status){
+  if(status==="Verified") return `<span class="status Verified">In Progress</span>`;
+  if(status==="Resolved") return `<span class="status Resolved">Solved</span>`;
+  return `<span class="status Pending">Pending</span>`;
+}
+
+// Load complaints
+function loadComplaints(filter = "", sortOrder = "newest") {
+  let complaints = JSON.parse(localStorage.getItem("complaints") || "[]");
+  const tbody = $("tableBody");
+  tbody.innerHTML = "";
+
+  // Default date if missing
+  complaints.forEach(c => {
+    if(!c.date){
+      c.date = new Date().toISOString();
+    }
+  });
+
+  // Sorting
+  complaints.sort((a,b)=>{
+    const da = new Date(a.date), db = new Date(b.date);
+    return sortOrder==="newest" ? db - da : da - db;
+  });
+
+  complaints.forEach((c, i) => {
+    if(!c.status) c.status = "Pending";
+
+    if (
+      filter &&
+      !(
+        (c.complaintId || "").toLowerCase().includes(filter) ||
+        (c.studentId || "").toLowerCase().includes(filter) ||
+        (c.regno || "").toLowerCase().includes(filter)
+      )
+    ) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.complaintId || "N/A"}</td>
+      <td>${c.category || "N/A"}</td>
+      <td>${c.title || "N/A"}</td>
+      <td>${c.desc || "N/A"}</td>
+      <td>${c.anonymous ? "null" : (c.studentId || "N/A")}</td>
+      <td>${c.anonymous ? "null" : (c.regno || "N/A")}</td>
+      <td>${new Date(c.date).toLocaleDateString()}</td>
+      <td>${formatStatus(c.status)}</td>
+      <td class="actions">
+        <button class="btn-verify" ${c.status!=="Pending"?"disabled":""}>Verify</button>
+        <button class="btn-resolve" ${c.status==="Resolved"?"disabled":""}>Resolve</button>
+        <button class="btn-delete">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    // Action buttons
+    tr.querySelector(".btn-verify").onclick = () => {
+      if(c.status !== "Pending") return;
+      c.status = "Verified";
+      localStorage.setItem("complaints", JSON.stringify(complaints));
+      loadComplaints(filter, sortOrder);
+    };
+
+    tr.querySelector(".btn-resolve").onclick = () => {
+      if(c.status === "Resolved") return;
+      c.status = "Resolved";
+      localStorage.setItem("complaints", JSON.stringify(complaints));
+      loadComplaints(filter, sortOrder);
+    };
+
+    tr.querySelector(".btn-delete").onclick = () => {
+      if(confirm("Delete this complaint?")) {
+        complaints.splice(i, 1);
+        localStorage.setItem("complaints", JSON.stringify(complaints));
+        loadComplaints(filter, sortOrder);
+      }
+    };
+  });
+
+  // Save back with dates included
+  localStorage.setItem("complaints", JSON.stringify(complaints));
+}
+
+// Search + sort listeners
+$("searchInput").addEventListener("input", () => 
+  loadComplaints($("searchInput").value.toLowerCase(), $("sortSelect").value)
+);
+
+$("sortSelect").addEventListener("change", () =>
+  loadComplaints($("searchInput").value.toLowerCase(), $("sortSelect").value)
+);
+
+// Init
+loadComplaints();
+</script>
+<!-- Add this right below the <body> tag -->
+<canvas id="particleCanvas"></canvas>
+
+<style>
+  /* Make sure canvas covers the page */
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* behind content */
+    background: linear-gradient(135deg, #e0f7ff, #eef2f7);
+  }
+</style>
+
+<script>
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Particle settings
+let particles = [];
+const particleCount = 300; // more visible
+for (let i = 0; i < particleCount; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 4 + 1, // radius 1-5px
+    dx: (Math.random() - 0.5) * 2.5,
+    dy: (Math.random() - 0.5) * 2.5
+  });
+}
+
+// Animate particles
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.dx;
+    p.y += p.dy;
+
+    // Bounce off edges
+    if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+    // Draw particle
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,123,255,0.8)";
+    ctx.fill();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// Resize canvas on window change
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>

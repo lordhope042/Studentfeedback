@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Announcements – HAFEDPOLY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;}
+body{margin:0;background:#f0f2f5;color:#333;}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000;}
+header h1{margin:0;color:#007bff;}
+.hamburger{width:28px;height:20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;z-index:1100;}
+.hamburger span{height:3px;background:#007bff;border-radius:2px;display:block;transition:.3s;}
+.hamburger.active span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+.hamburger.active span:nth-child(2){opacity:0;}
+.hamburger.active span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+nav{position:fixed;top:0;right:-250px;width:220px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.15);padding:20px;transition:.3s;z-index:1000;}
+nav.active{right:0;}
+nav a{display:block;margin:14px 0;color:#007bff;text-decoration:none;font-weight:600;}
+.container{padding:20px;max-width:950px;margin:20px auto;}
+form{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-bottom:20px;}
+label{font-weight:600;display:block;margin-top:10px;}
+input,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-top:6px;transition:.2s;}
+input:focus,textarea:focus{border-color:#007bff;box-shadow:0 0 0 4px rgba(0,123,255,.12);outline:none;}
+button{padding:10px 16px;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
+.btn-add{background:#007bff;color:#fff;margin-top:12px;}
+.btn-add:hover{background:#005ecb;}
+.table-wrapper{overflow-x:auto;border-radius:12px;}
+table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #ddd;}
+th{background:#007bff;color:#fff;}
+td.actions button{margin-right:6px;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;}
+.btn-edit{background:#ffc107;}
+.btn-edit:hover{background:#e0a800;}
+.btn-delete{background:#dc3545;}
+.btn-delete:hover{background:#c82333;}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;}
+.modal-content{background:#fff;padding:20px;border-radius:12px;max-width:400px;width:100%;box-shadow:0 6px 16px rgba(0,0,0,.2);}
+.modal-content h3{margin-top:0;color:#007bff;}
+.modal-content input,.modal-content textarea{margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Admin Announcements</h1>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</header>
+
+<nav id="nav">
+  <a href="admin-dashboard.html">Dashboard</a>
+  <a href="admin-complaint.html">Complaints</a>
+  <a href="admin-suggestion.html">Suggestions</a>
+  <a href="admin-announcement.html">Announcements</a>
+  <a href="admin-verify.html">Verify IDs</a>
+  <a href="admin-report.html">Reports</a>
+  <a href="#" id="logoutLink">Logout</a>
+</nav>
+
+<div class="container">
+  <!-- Add Announcement -->
+  <form id="announcementForm">
+    <h2>Create Announcement</h2>
+    <label>Title</label>
+    <input type="text" id="title" required>
+    <label>Description</label>
+    <textarea id="desc" rows="3" required></textarea>
+    <button type="submit" class="btn-add">Add Announcement</button>
+  </form>
+
+  <!-- Announcements List -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="announcementsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <h3>Edit Announcement</h3>
+    <input type="text" id="editTitle" placeholder="Title">
+    <textarea id="editDesc" rows="3" placeholder="Description"></textarea>
+    <div style="text-align:right;">
+      <button onclick="closeModal()">Cancel</button>
+      <button id="saveEdit" style="background:#007bff;color:#fff;">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const hamburger=$("hamburger");
+const nav=$("nav");
+
+hamburger.addEventListener("click", e=>{
+  e.stopPropagation();
+  hamburger.classList.toggle("active");
+  nav.classList.toggle("active");
+});
+
+document.addEventListener("click", e=>{
+  if(!nav.contains(e.target) && !hamburger.contains(e.target)){
+    nav.classList.remove("active");
+    hamburger.classList.remove("active");
+  }
+});
+
+$("logoutLink").onclick = ()=>{
+  localStorage.removeItem("activeAdmin");
+  location.href="login.html";
+};
+
+let editIndex=null;
+
+function genId(){return "ANN-" + Date.now().toString(36).toUpperCase();}
+
+function loadAnnouncements(){
+  const anns=JSON.parse(localStorage.getItem("announcements")||"[]");
+  const tbody=$("announcementsBody");
+  tbody.innerHTML="";
+  anns.forEach((a,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${a.id}</td>
+      <td>${a.title}</td>
+      <td>${a.desc}</td>
+      <td>${a.date}</td>
+      <td class="actions">
+        <button class="btn-edit">Edit</button>
+        <button class="btn-delete">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+
+    tr.querySelector(".btn-edit").onclick=()=>{
+      editIndex=i;
+      $("editTitle").value=a.title;
+      $("editDesc").value=a.desc;
+      $("editModal").style.display="flex";
+      $("editTitle").focus();
+    };
+
+    tr.querySelector(".btn-delete").onclick=()=>{
+      if(confirm("Delete this announcement?")){
+        anns.splice(i,1);
+        localStorage.setItem("announcements",JSON.stringify(anns));
+        loadAnnouncements();
+      }
+    };
+  });
+}
+
+$("announcementForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const title=$("title").value.trim();
+  const desc=$("desc").value.trim();
+  if(!title||!desc) return;
+  const anns=JSON.parse(localStorage.getItem("announcements")||"[]");
+  anns.push({id:genId(),title,desc,date:new Date().toLocaleString()});
+  localStorage.setItem("announcements",JSON.stringify(anns));
+  $("announcementForm").reset();
+  loadAnnouncements();
+});
+
+$("saveEdit").onclick=()=>{
+  let anns=JSON.parse(localStorage.getItem("announcements")||"[]");
+  if(editIndex!==null){
+    anns[editIndex].title=$("editTitle").value.trim();
+    anns[editIndex].desc=$("editDesc").value.trim();
+    localStorage.setItem("announcements",JSON.stringify(anns));
+    loadAnnouncements();
+    closeModal();
+  }
+};
+
+function closeModal(){$("editModal").style.display="none";}
+
+loadAnnouncements();
+</script>
+<!-- Add this right below the <body> tag -->
+<canvas id="particleCanvas"></canvas>
+
+<style>
+  /* Make sure canvas covers the page */
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* behind content */
+    background: linear-gradient(135deg, #e0f7ff, #eef2f7);
+  }
+</style>
+
+<script>
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Particle settings
+let particles = [];
+const particleCount = 300; // more visible
+for (let i = 0; i < particleCount; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 4 + 1, // radius 1-5px
+    dx: (Math.random() - 0.5) * 2.5,
+    dy: (Math.random() - 0.5) * 2.5
+  });
+}
+
+// Animate particles
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.dx;
+    p.y += p.dy;
+
+    // Bounce off edges
+    if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+    // Draw particle
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,123,255,0.8)";
+    ctx.fill();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// Resize canvas on window change
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</body>
+</html>

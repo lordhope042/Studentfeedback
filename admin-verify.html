@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Verify – HAFEDPOLY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;}
+body{margin:0;background:#f0f2f5;color:#333;}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+header h1{margin:0;color:#007bff;}
+.hamburger{width:28px;height:20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;}
+.hamburger span{height:3px;background:#007bff;border-radius:2px;display:block;transition:.3s;}
+.hamburger.active span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+.hamburger.active span:nth-child(2){opacity:0;}
+.hamburger.active span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+nav{position:fixed;top:0;right:-250px;width:220px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.15);padding:20px;transition:.3s;overflow-y:auto;}
+nav.active{right:0;}
+nav a{display:block;margin:14px 0;color:#007bff;text-decoration:none;font-weight:600;}
+.container{padding:20px;max-width:800px;margin:40px auto;}
+.search-bar{display:flex;gap:10px;}
+input{flex:1;padding:12px 14px;border:1px solid #ccc;border-radius:30px;font-size:16px;}
+input:focus{border-color:#007bff;box-shadow:0 0 0 4px rgba(0,123,255,.12);outline:none;}
+button{padding:10px 16px;border:none;border-radius:30px;font-weight:600;cursor:pointer;transition:.2s;}
+button:hover{opacity:.9;}
+.btn-verify{background:#28a745;color:#fff;}
+.btn-resolve{background:#17a2b8;color:#fff;}
+.btn-delete{background:#dc3545;color:#fff;}
+.btn-disabled{background:#303CBB;color:#fff;cursor:not-allowed;}
+.card{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-top:20px;animation:fadeIn .3s ease;}
+.card h3{margin-top:0;color:#007bff;}
+.card p{margin:6px 0;}
+.card .actions{margin-top:12px;}
+.badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600;}
+.badge.pending{background:#ffc107;color:#000;}
+.badge.verified{background:#28a745;color:#fff;}
+.badge.resolved{background:#17a2b8;color:#fff;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Admin Verify</h1>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</header>
+
+<nav id="nav">
+  <a href="admin-dashboard.html">Dashboard</a>
+  <a href="admin-complaint.html">Complaints</a>
+  <a href="admin-suggestion.html">Suggestions</a>
+  <a href="admin-announcement.html">Announcements</a>
+  <a href="admin-verify.html">Verify IDs</a>
+  <a href="admin-report.html">Admin report</a>
+  <a href="#" id="logoutLink">Logout</a>
+</nav>
+
+<div class="container">
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Enter Student ID, Reg No, Complaint ID, Suggestion ID, or Email" autofocus>
+    <button id="searchBtn">Search</button>
+  </div>
+  <div id="result"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const hamburger=$("hamburger"), nav=$("nav");
+hamburger.onclick=()=>{hamburger.classList.toggle("active");nav.classList.toggle("active");};
+$("logoutLink").addEventListener("click",()=>{localStorage.removeItem("activeAdmin");location.href="login.html";});
+
+// Show card
+function showItem(item, student){
+  let statusBadge = "";
+  if(item.type !== "Student"){
+    statusBadge = `<span class="badge ${item.status?.toLowerCase()||"pending"}">${item.status||"Pending"}</span>`;
+  }
+  return `
+    <div class="card">
+      <h3>${item.type} – ${item.complaintId || item.suggestionId || student?.uniqueId || "N/A"} ${statusBadge}</h3>
+      ${student ? `
+        <p><strong>Name:</strong> ${student.name}</p>
+        <p><strong>Email:</strong> ${student.email}</p>
+        <p><strong>Reg No:</strong> ${student.regno}</p>
+        <p><strong>Level:</strong> ${student.level}</p>
+        <p><strong>Department:</strong> ${student.department}</p>
+        <p><strong>Student ID:</strong> ${student.uniqueId}</p>
+      ` : ""}
+      ${item.type!=="Student"?`
+        <p><strong>Category:</strong> ${item.category||""}</p>
+        <p><strong>Title:</strong> ${item.title||""}</p>
+        <p><strong>Description:</strong> ${item.desc||""}</p>
+
+        <div class="actions">
+          <button class="btn-verify" ${item.status==="Verified"||item.status==="Resolved"?"disabled":""}>
+            ${item.status==="Verified"?"✅ Verified":item.status==="Resolved"?"Verified":"Verify"}
+          </button>
+          <button class="btn-resolve" ${item.status==="Resolved"?"disabled":""}>
+            ${item.status==="Resolved"?"✔ Resolved":"Resolve"}
+          </button>
+          <button class="btn-delete">Delete</button>
+        </div>
+      `:""}
+    </div>
+  `;
+}
+
+// Search
+function searchItem(){
+  const filter = $("searchInput").value.trim().toLowerCase();
+  if(!filter) return alert("Please enter an ID, Reg No, or Email.");
+
+  const users = JSON.parse(localStorage.getItem("users")||"[]");
+  const complaints = JSON.parse(localStorage.getItem("complaints")||"[]");
+  const suggestions = JSON.parse(localStorage.getItem("suggestions")||"[]");
+
+  let found=null, student=null;
+
+  student = users.find(u=>
+    u.uniqueId?.toLowerCase()===filter ||
+    u.regno?.toLowerCase()===filter ||
+    u.email?.toLowerCase()===filter
+  );
+  if(student) found={...student,type:"Student"};
+
+  if(!found){
+    const c = complaints.find(c=>
+      c.complaintId?.toLowerCase()===filter ||
+      c.studentId?.toLowerCase()===filter
+    );
+    if(c){ found={...c,type:"Complaint"}; student = users.find(u=>u.uniqueId===c.studentId)||null; }
+  }
+
+  if(!found){
+    const s = suggestions.find(s=>
+      s.suggestionId?.toLowerCase()===filter ||
+      s.studentId?.toLowerCase()===filter
+    );
+    if(s){ found={...s,type:"Suggestion"}; student = users.find(u=>u.uniqueId===s.studentId)||null; }
+  }
+
+  const container=$("result"); container.innerHTML="";
+  if(!found){ container.innerHTML="<p>No record found.</p>"; return; }
+  container.innerHTML=showItem(found,student);
+
+  const card=container.firstElementChild;
+  if(found.type!=="Student"){
+    const verifyBtn = card.querySelector(".btn-verify");
+    const resolveBtn = card.querySelector(".btn-resolve");
+    const deleteBtn = card.querySelector(".btn-delete");
+    const badge = card.querySelector(".badge");
+
+    verifyBtn.onclick=()=>{
+      if(found.status==="Verified"||found.status==="Resolved") return;
+      found.status="Verified"; found.verifier="Admin";
+      updateStorage(found);
+      badge.textContent="Verified"; badge.className="badge verified";
+      verifyBtn.textContent="✅ Verified"; verifyBtn.disabled=true;
+    };
+
+    resolveBtn.onclick=()=>{
+      if(found.status==="Resolved") return;
+      found.status="Resolved"; found.verifier="Admin";
+      updateStorage(found);
+      badge.textContent="Resolved"; badge.className="badge resolved";
+      resolveBtn.textContent="✔ Resolved"; resolveBtn.disabled=true;
+      verifyBtn.disabled=true; verifyBtn.classList.add("btn-disabled");
+    };
+
+    deleteBtn.onclick=()=>{
+      if(!confirm("Delete this entry?")) return;
+      if(found.type==="Complaint"){
+        const idx=complaints.findIndex(c=>c.complaintId===found.complaintId);
+        if(idx>-1) complaints.splice(idx,1);
+        localStorage.setItem("complaints",JSON.stringify(complaints));
+      }else{
+        const idx=suggestions.findIndex(s=>s.suggestionId===found.suggestionId);
+        if(idx>-1) suggestions.splice(idx,1);
+        localStorage.setItem("suggestions",JSON.stringify(suggestions));
+      }
+      container.innerHTML="<p>Entry deleted.</p>";
+    };
+  }
+
+  function updateStorage(item){
+    if(item.type==="Complaint"){
+      const idx=complaints.findIndex(c=>c.complaintId===item.complaintId);
+      if(idx>-1) complaints[idx]=item;
+      localStorage.setItem("complaints",JSON.stringify(complaints));
+    }else{
+      const idx=suggestions.findIndex(s=>s.suggestionId===item.suggestionId);
+      if(idx>-1) suggestions[idx]=item;
+      localStorage.setItem("suggestions",JSON.stringify(suggestions));
+    }
+  }
+}
+
+$("searchBtn").addEventListener("click",searchItem);
+$("searchInput").addEventListener("keypress",e=>{ if(e.key==="Enter"){ e.preventDefault(); searchItem(); } });
+window.onload=()=>{ $("searchInput").focus(); };
+</script>
+<!-- Add this right below the <body> tag -->
+<canvas id="particleCanvas"></canvas>
+
+<style>
+  /* Make sure canvas covers the page */
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* behind content */
+    background: linear-gradient(135deg, #e0f7ff, #eef2f7);
+  }
+</style>
+
+<script>
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Particle settings
+let particles = [];
+const particleCount = 300; // more visible
+for (let i = 0; i < particleCount; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 4 + 1, // radius 1-5px
+    dx: (Math.random() - 0.5) * 2.5,
+    dy: (Math.random() - 0.5) * 2.5
+  });
+}
+
+// Animate particles
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.dx;
+    p.y += p.dy;
+
+    // Bounce off edges
+    if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+    // Draw particle
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,123,255,0.8)";
+    ctx.fill();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// Resize canvas on window change
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>

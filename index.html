@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HAFEDPOLY Portal – Landing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  *{box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;margin:0;padding:0;}
+  body{min-height:100vh;background:#007bff;color:#fff;overflow-x:hidden;scroll-behavior:smooth;position:relative;}
+  a{text-decoration:none;color:inherit;}
+
+  /* Scroll progress bar */
+  #progressBar{position:fixed;top:0;left:0;width:0%;height:4px;background:#fff;z-index:1002;transition:width 0.25s ease;}
+
+  /* Particle background */
+  #particles-js{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+
+  /* Hamburger */
+  .hamburger{position:fixed;top:20px;right:20px;width:30px;height:22px;cursor:pointer;z-index:1001}
+  .hamburger span{display:block;height:4px;background:#fff;margin:5px 0;border-radius:2px;transition:.4s}
+  .hamburger.active span:nth-child(1){transform:translateY(9px) rotate(45deg)}
+  .hamburger.active span:nth-child(2){opacity:0}
+  .hamburger.active span:nth-child(3){transform:translateY(-9px) rotate(-45deg)}
+
+  /* Sidebar menu */
+  .menu{position:fixed;top:0;right:-250px;width:220px;height:100%;background:#fff;padding:60px 20px;box-shadow:-3px 0 10px rgba(0,0,0,.15);transition:.4s;z-index:1000;color:#007bff;}
+  .menu.active{right:0}
+  .menu a{display:block;margin:15px 0;font-weight:600;transition:.2s;color:#007bff;}
+  .menu a:hover{color:#005ecb}
+
+  /* Hero */
+  .hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:100px 20px;}
+  .hero img{width:120px;height:120px;margin-bottom:16px;border-radius:50%;border:3px solid #fff;}
+  .hero h1{font-size:36px;margin-bottom:12px;}
+  .hero p{font-size:18px;margin-bottom:20px;}
+  .hero .btn{display:inline-block;padding:12px 24px;margin:6px;border-radius:10px;background:#fff;color:#007bff;font-weight:600;transition:.2s;}
+  .hero .btn:hover{background:#f0f0f0;}
+
+  /* Counters */
+  .counters{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;margin-top:40px;}
+  .counter-card{background:rgba(255,255,255,.1);padding:20px;border-radius:16px;width:150px;text-align:center;transition:.3s;}
+  .counter-card h2{font-size:32px;color:#fff;}
+  .counter-card p{font-size:14px;color:#f0f0f0;margin-top:6px;}
+
+  /* Features */
+  .features{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:40px 20px;}
+  .feature-card{background:#fff;color:#007bff;border-radius:16px;padding:20px;width:220px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.1);transition:.6s;opacity:0;transform:translateY(30px);}
+  .feature-card.show{opacity:1;transform:translateY(0);}
+  .feature-card img{width:60px;height:60px;margin-bottom:12px;}
+  .feature-card h3{margin-bottom:6px;}
+  .feature-card p{font-size:14px;color:#555;}
+
+  /* Announcements */
+  .announcements{padding:40px 20px;background:#f0f2f5;color:#333;}
+  .announcements h2{text-align:center;color:#007bff;margin-bottom:24px;}
+  .announcement-list{display:flex;overflow-x:auto;gap:16px;padding-bottom:10px;}
+  .announcement{min-width:250px;background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);opacity:0;transform:translateY(20px);transition:.5s;}
+  .announcement.show{opacity:1;transform:translateY(0);}
+  .announcement h4{margin-bottom:8px;color:#007bff;}
+  .announcement p{font-size:14px;}
+  .announcement span{font-size:12px;color:#999;}
+
+  /* Contact */
+  .contact{padding:40px 20px;text-align:center;}
+  .contact h2{color:#fff;margin-bottom:16px;}
+  .contact p{font-size:16px;color:#f0f0f0;}
+
+  /* Footer */
+  footer{background:#005ecb;color:#fff;text-align:center;padding:24px;margin-top:40px;}
+  footer a{color:#fff;font-weight:600;}
+  footer a:hover{color:#f0f0f0;}
+
+  /* Responsive */
+  @media(max-width:768px){.features{flex-direction:column;align-items:center;}.counters{flex-direction:column;align-items:center;}}
+  @media(max-width:480px){.hero h1{font-size:28px;} .hero p{font-size:16px;} .hero .btn{padding:10px 16px;}}
+</style>
+</head>
+<body>
+
+<!-- Scroll Progress Bar -->
+<div id="progressBar"></div>
+
+<!-- Particle Background -->
+<canvas id="particles-js"></canvas>
+
+<!-- Hamburger -->
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+
+<!-- Sidebar Menu -->
+<div class="menu" id="menu">
+  <a href="#hero">Home</a>
+  <a href="register.html">Register</a>
+  <a href="login.html">Login</a>
+  <a href="#features">Features</a>
+  <a href="#announcements">Announcements</a>
+  <a href="#contact">Contact</a>
+</div>
+
+<!-- Hero Section -->
+<section class="hero" id="hero">
+  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Portal">
+  <h1>Welcome to HAFEDPOLY Portal</h1>
+  <p>Submit complaints, suggestions & track responses easily.</p>
+  <a href="register.html" class="btn">Register</a>
+  <a href="login.html" class="btn">Login</a>
+
+  <!-- Counters -->
+  <div class="counters">
+    <div class="counter-card"><h2 id="totalComplaints">0</h2><p>Complaints</p></div>
+    <div class="counter-card"><h2 id="totalSuggestions">0</h2><p>Suggestions</p></div>
+    <div class="counter-card"><h2 id="totalAnnouncements">0</h2><p>Announcements</p></div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+  <div class="feature-card"><img src="https://cdn-icons-png.flaticon.com/512/2910/2910762.png"><h3>Submit Complaints</h3><p>Report issues quickly with detailed complaints form.</p></div>
+  <div class="feature-card"><img src="https://cdn-icons-png.flaticon.com/512/2910/2910763.png"><h3>Submit Suggestions</h3><p>Provide suggestions to improve the campus environment.</p></div>
+  <div class="feature-card"><img src="https://cdn-icons-png.flaticon.com/512/2910/2910764.png"><h3>Track Responses</h3><p>Monitor the status of your submissions in real-time.</p></div>
+  <div class="feature-card"><img src="https://cdn-icons-png.flaticon.com/512/2910/2910765.png"><h3>Announcements</h3><p>Stay updated with latest news from administration.</p></div>
+</section>
+
+<!-- Announcements -->
+<section class="announcements" id="announcements">
+  <h2>Recent Announcements</h2>
+  <div class="announcement-list" id="announcementList"></div>
+</section>
+
+<!-- Contact -->
+<section class="contact" id="contact">
+  <h2>Contact Us</h2>
+  <p>Email: <strong>support@hafedpoly.edu</strong> | Phone: <strong>+234 080 0000 0000</strong></p>
+</section>
+
+<!-- Footer -->
+<footer>
+  &copy; 2025 HAFEDPOLY. All rights reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+<script>
+  // Hamburger toggle
+  const ham = document.getElementById("hamburger");
+  const menu = document.getElementById("menu");
+  ham.addEventListener("click",()=>{ham.classList.toggle("active");menu.classList.toggle("active");});
+  document.querySelectorAll(".menu a").forEach(link=>link.addEventListener("click",()=>{ham.classList.remove("active");menu.classList.remove("active");}));
+
+  // Load announcements from localStorage
+  const announcementList = document.getElementById("announcementList");
+  function loadAnnouncements(){
+    const anns = JSON.parse(localStorage.getItem("announcements")||"[]");
+    announcementList.innerHTML = "";
+    document.getElementById("totalAnnouncements").textContent = anns.length;
+    if(anns.length === 0) announcementList.innerHTML="<p>No announcements yet.</p>";
+    anns.slice(-5).reverse().forEach((a,index)=>{
+      const div=document.createElement("div");
+      div.className="announcement";
+      div.innerHTML=`<h4>${a.title}</h4><p>${a.desc}</p><span>${a.date}</span>`;
+      announcementList.appendChild(div);
+      setTimeout(()=>div.classList.add("show"),index*150);
+    });
+  }
+  loadAnnouncements();
+
+  // Load counters for complaints and suggestions
+  document.getElementById("totalComplaints").textContent = JSON.parse(localStorage.getItem("complaints")||"[]").length;
+  document.getElementById("totalSuggestions").textContent = JSON.parse(localStorage.getItem("suggestions")||"[]").length;
+
+  // Animate feature cards on scroll
+  const featureCards = document.querySelectorAll(".feature-card");
+  function showCards(){const trigger=window.innerHeight*0.85;featureCards.forEach(c=>{const top=c.getBoundingClientRect().top;if(top<trigger)c.classList.add("show");});}
+  window.addEventListener("scroll",showCards);
+  showCards();
+
+  // Scroll progress bar
+  window.addEventListener("scroll",()=>{const winScroll=document.body.scrollTop||document.documentElement.scrollTop;const height=document.documentElement.scrollHeight-document.documentElement.clientHeight;document.getElementById("progressBar").style.width=(winScroll/height*100)+"%";});
+
+  // Initialize particles
+  tsParticles.load("particles-js",{
+    fpsLimit:60,
+    particles:{
+      number:{value:50,density:{enable:true,value_area:800}},
+      color:{value:"#ffffff"},
+      shape:{type:"circle"},
+      opacity:{value:0.3},
+      size:{value:3,random:true},
+      move:{enable:true,speed:2,direction:"none",random:true,straight:false,out_mode:"out"}
+    },
+    interactivity:{events:{onhover:{enable:true,mode:"repulse"},onclick:{enable:true,mode:"push"}},modes:{repulse:{distance:100},push:{particles_nb:4}}},
+    detectRetina:true
+  });
+</script>
+</body>
+</html>
