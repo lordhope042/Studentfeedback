@@ -135,7 +135,9 @@ $("regno").addEventListener("input", () => {
 });
 
 // Unique ID generator
-function genId(){ return ("HAF-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,6)).toUpperCase(); }
+function genUniqueId(){ 
+  return ("HAF-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,6)).toUpperCase(); 
+}
 
 // Submit form
 $("form").addEventListener("submit", e => {
@@ -157,16 +159,8 @@ $("form").addEventListener("submit", e => {
   if(users.some(u => u.regno===regno)){msg.textContent="Reg No already registered."; msg.classList.add("err"); return;}
   if(users.some(u => u.email===email)){msg.textContent="Email already registered."; msg.classList.add("err"); return;}
 
-  // Generate unique ID
-  const uniqueId = genId();
-
-  const user = {
-    id: uniqueId,           // save as "id"
-    uniqueId: uniqueId,     // also save as "uniqueId"
-    name, email, regno, level, department, password,
-    role:"student", pic:""
-  };
-
+  // ✅ use uniqueId consistently
+  const user = {uniqueId:genUniqueId(), name, email, regno, level, department, password, role:"student", pic:""};
   users.push(user);
   localStorage.setItem("users", JSON.stringify(users));
 
@@ -175,8 +169,7 @@ $("form").addEventListener("submit", e => {
   $("uniqueBox").style.display = "block"; // reveal unique ID box
 
   localStorage.setItem("activeUser", JSON.stringify(user));
-
-  setTimeout(()=>location.href="login.html",2000);
+  setTimeout(()=>location.href="login.html",1500);
 });
 
 // Network particle background
