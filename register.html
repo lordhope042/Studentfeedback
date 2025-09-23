@@ -4,14 +4,12 @@
 <meta charset="UTF-8">
 <title>Student Registration – HAFEDPOLY</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script type="module" src="module.js">
-</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <style>
 /* Base styling */
 *{box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;}
 body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
-      background:#007bff;position:relative;overflow-x:hidden;}
+      background:#007bff;position:relative;overflow:hidden;}
 #networkCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
 
 /* Form box */
@@ -51,6 +49,10 @@ button:hover{background:#005ecb;}
 .small{margin-top:14px;text-align:center;font-size:13px;}
 .small a{color:#007bff;text-decoration:none;}
 .small a:hover{text-decoration:underline;}
+
+/* Unique ID */
+#uniqueBox{display:none;margin-top:14px;text-align:center;font-size:14px;font-weight:600;color:#333;}
+#uniqueBox span{color:#188038;}
 </style>
 </head>
 <body>
@@ -91,10 +93,14 @@ button:hover{background:#005ecb;}
       <span class="toggle" id="togglePass"><i class="fa-solid fa-eye"></i></span>
     </div>
 
-    <button type="submit" id="submit">Create Account</button>
+    <button type="submit">Create Account</button>
   </form>
 
   <div id="msg" class="msg"></div>
+
+  <!-- Hidden Unique ID box -->
+  <div id="uniqueBox">Your Unique ID: <span id="suid">N/A</span></div>
+
   <div class="small">Already have an account? <a href="login.html">Login</a></div>
 </div>
 
@@ -128,7 +134,7 @@ $("regno").addEventListener("input", () => {
   $("dept").value = m ? (DEPARTMENTS[m[2]] || "") : "";
 });
 
-// Unique ID
+// Unique ID generator
 function genId(){ return ("HAF-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,6)).toUpperCase(); }
 
 // Submit form
@@ -151,13 +157,26 @@ $("form").addEventListener("submit", e => {
   if(users.some(u => u.regno===regno)){msg.textContent="Reg No already registered."; msg.classList.add("err"); return;}
   if(users.some(u => u.email===email)){msg.textContent="Email already registered."; msg.classList.add("err"); return;}
 
-  const user = {id:genId(), name, email, regno, level, department, password, role:"student", pic:""};
+  // Generate unique ID
+  const uniqueId = genId();
+
+  const user = {
+    id: uniqueId,           // save as "id"
+    uniqueId: uniqueId,     // also save as "uniqueId"
+    name, email, regno, level, department, password,
+    role:"student", pic:""
+  };
+
   users.push(user);
   localStorage.setItem("users", JSON.stringify(users));
 
-  msg.textContent = "Registered successfully! Unique ID: " + user.id; msg.classList.add("ok");
+  msg.textContent = "Registered successfully!"; msg.classList.add("ok");
+  $("suid").textContent = user.uniqueId; 
+  $("uniqueBox").style.display = "block"; // reveal unique ID box
+
   localStorage.setItem("activeUser", JSON.stringify(user));
-  setTimeout(()=>location.href="login.html",800);
+
+  setTimeout(()=>location.href="login.html",2000);
 });
 
 // Network particle background
@@ -211,7 +230,6 @@ window.addEventListener('resize',()=>{
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 });
-
 </script>
 </body>
 </html>
