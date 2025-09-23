@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<link rel="icon" type="image/png" href="https://static.thenounproject.com/png/thumbs-up-feedback-icon-2925315-512.png">
 <title>Student Dashboard – HAFEDPOLY</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
@@ -11,7 +12,8 @@
   /* Particle canvas */
   #networkCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
 
-  header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000}
+  header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:#fff;
+         box-shadow:0 4px 10px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000}
   header h1{font-size:20px;color:#007bff;}
   .hamburger{width:28px;height:20px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;}
   .hamburger span{display:block;height:3px;background:#007bff;border-radius:2px;transition:.3s;}
@@ -19,7 +21,8 @@
   .hamburger.active span:nth-child(2){opacity:0;}
   .hamburger.active span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
   
-  nav{position:fixed;top:0;right:-250px;width:220px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.15);padding:20px;transition:.3s;z-index:999;}
+  nav{position:fixed;top:0;right:-250px;width:220px;height:100%;background:#fff;
+      box-shadow:-2px 0 10px rgba(0,0,0,.15);padding:20px;transition:.3s;z-index:999;}
   nav.active{right:0;}
   nav a{display:block;margin:14px 0;color:#007bff;text-decoration:none;font-weight:600;}
 
@@ -39,8 +42,10 @@
   .btn-danger{background:#dc3545;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
 
   /* Modal */
-  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:2000;}
-  .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);
+         align-items:center;justify-content:center;z-index:2000;}
+  .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;
+                 box-shadow:0 6px 20px rgba(0,0,0,.25);}
   .modal-content h3{margin-top:0;color:#007bff;}
   .modal-content label{display:block;margin:10px 0 5px;font-weight:600;}
   .modal-content input{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;}
@@ -90,6 +95,7 @@
         <p><strong>Level:</strong> <span id="slevel"></span></p>
         <p><strong>Department:</strong> <span id="sdept"></span></p>
         <p><strong>Unique ID:</strong> <span id="suid"></span></p>
+        <p class="small">Only name, email, picture can be changed here. Reg No is fixed.</p>
         <div style="margin-top:12px">
           <button id="editProfileBtn">Edit Profile</button>
           <button id="changePasswordBtn" style="margin-left:8px;">Change Password</button>
@@ -140,239 +146,121 @@
     <div class="alert error" id="errorMsg"></div>
   </div>
 </div>
-<canvas id="bgCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;"></canvas>
 
 <script>
 // --- Particle Background ---
-const canvas = document.getElementById("bgCanvas");
+const canvas = document.getElementById("networkCanvas");
 const ctx = canvas.getContext("2d");
-
 let particles = [];
-const particleCount = 80;
+const particleCount = 90;
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-function random(min, max) { return Math.random() * (max - min) + min; }
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener("resize", resizeCanvas); resizeCanvas();
 
 class Particle {
-    constructor() {
-        this.x = random(0, canvas.width);
-        this.y = random(0, canvas.height);
-        this.radius = random(2, 5);
-        this.speedX = random(-0.5, 0.5);
-        this.speedY = random(-0.5, 0.5);
-    }
-    update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-
-        if(this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-        if(this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-    }
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(255,255,255,0.6)";
-        ctx.fill();
-    }
+  constructor(){
+    this.x = Math.random()*canvas.width;
+    this.y = Math.random()*canvas.height;
+    this.r = Math.random()*3+1;
+    this.vx = (Math.random()-0.5)*0.8;
+    this.vy = (Math.random()-0.5)*0.8;
+  }
+  update(){
+    this.x+=this.vx; this.y+=this.vy;
+    if(this.x<0||this.x>canvas.width) this.vx*=-1;
+    if(this.y<0||this.y>canvas.height) this.vy*=-1;
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,0.7)";
+    ctx.fill();
+  }
 }
 
-// Init particles
 for(let i=0;i<particleCount;i++) particles.push(new Particle());
 
-function animateParticles() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    particles.forEach(p => {
-        p.update();
-        p.draw();
-    });
-    // Draw lines between close particles
-    for(let i=0;i<particles.length;i++){
-        for(let j=i+1;j<particles.length;j++){
-            let dx = particles[i].x - particles[j].x;
-            let dy = particles[i].y - particles[j].y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist < 120){
-                ctx.beginPath();
-                ctx.strokeStyle = "rgba(255,255,255,"+(1-dist/120)*0.3+")";
-                ctx.lineWidth = 1;
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(particles[j].x, particles[j].y);
-                ctx.stroke();
-            }
-        }
+function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{p.update();p.draw();});
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      let dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      let dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<130){
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(255,255,255,${1-dist/130})`;
+        ctx.stroke();
+      }
     }
-    requestAnimationFrame(animateParticles);
+  }
+  requestAnimationFrame(animate);
 }
-animateParticles();
+animate();
 
-// --- Helper function ---
-const $ = id => document.getElementById(id);
+// --- Helpers ---
+const $=id=>document.getElementById(id);
 
-// --- Hamburger menu toggle ---
-const hamburger = $("hamburger");
-const nav = $("nav");
-hamburger.addEventListener("click", () => {
-    hamburger.classList.toggle("active");
-    nav.classList.toggle("active");
-});
+// Hamburger menu
+$("hamburger").onclick=()=>{ $("hamburger").classList.toggle("active"); $("nav").classList.toggle("active"); };
 
-// --- Local Storage Helpers ---
-function getActiveStudent() { return JSON.parse(localStorage.getItem("activeStudent") || "null"); }
+// LocalStorage helpers
+function getActiveStudent(){ return JSON.parse(localStorage.getItem("activeStudent")||"null"); }
 function saveActiveStudent(student){
-    localStorage.setItem("activeStudent", JSON.stringify(student));
-    let users = JSON.parse(localStorage.getItem("users") || "[]");
-    const idx = users.findIndex(u => u.regno === student.regno);
-    if(idx > -1) users[idx] = {...users[idx], ...student};
-    else users.push(student);
-    localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("activeStudent",JSON.stringify(student));
+  let users=JSON.parse(localStorage.getItem("users")||"[]");
+  let idx=users.findIndex(u=>u.regno===student.regno);
+  if(idx>-1) users[idx]={...users[idx],...student}; else users.push(student);
+  localStorage.setItem("users",JSON.stringify(users));
 }
 
-// --- Profile Handling ---
-function loadProfile() {
-    const active = getActiveStudent();
-    if(!active) { alert("Session expired. Please log in."); location.href="login.html"; return; }
-
-    $("sname").textContent = active.name || "";
-    $("semail").textContent = active.email || "";
-    $("sregno").textContent = active.regno || "";
-    $("slevel").textContent = active.level || "";
-    $("sdept").textContent = active.department || "";
-    $("suid").textContent = active.uniqueId || "N/A";
-
-    if(active.pic) {
-        $("sPic").src = active.pic;
-        $("addPhotoBtn").style.display = "none";
-        $("changePhotoBtn").style.display = "inline-block";
-        $("removePhotoBtn").style.display = "inline-block";
-    } else {
-        $("sPic").src = "https://via.placeholder.com/240x240.png?text=No+Photo";
-        $("addPhotoBtn").style.display = "inline-block";
-        $("changePhotoBtn").style.display = "none";
-        $("removePhotoBtn").style.display = "none";
-    }
+// Profile load
+function loadProfile(){
+  const active=getActiveStudent();
+  if(!active){ alert("Session expired. Please log in."); location.href="login.html"; return; }
+  $("sname").textContent=active.name||""; $("semail").textContent=active.email||"";
+  $("sregno").textContent=active.regno||""; $("slevel").textContent=active.level||"";
+  $("sdept").textContent=active.department||""; $("suid").textContent=active.uniqueId||"N/A";
+  if(active.pic){ $("sPic").src=active.pic; $("addPhotoBtn").style.display="none"; $("changePhotoBtn").style.display="inline-block"; $("removePhotoBtn").style.display="inline-block"; }
+  else{ $("sPic").src="https://via.placeholder.com/240x240.png?text=No+Photo"; $("addPhotoBtn").style.display="inline-block"; $("changePhotoBtn").style.display="none"; $("removePhotoBtn").style.display="none"; }
 }
 
-// --- Photo Upload ---
-const uploadInput = $("uploadPic");
-$("addPhotoBtn").onclick = $("changePhotoBtn").onclick = () => uploadInput.click();
-uploadInput.onchange = e => {
-    const file = e.target.files[0]; uploadInput.value="";
-    if(!file || !file.type.startsWith("image/")) { alert("Select a valid image."); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-        $("sPic").src = reader.result;
-        const active = getActiveStudent();
-        active.pic = reader.result;
-        saveActiveStudent(active);
-    };
-    reader.readAsDataURL(file);
+// Photo upload
+$("addPhotoBtn").onclick=$("changePhotoBtn").onclick=()=>$("uploadPic").click();
+$("uploadPic").onchange=e=>{
+  const f=e.target.files[0]; if(!f||!f.type.startsWith("image/")) return alert("Select a valid image.");
+  const r=new FileReader(); r.onload=()=>{ const a=getActiveStudent(); a.pic=r.result; saveActiveStudent(a); loadProfile(); }; r.readAsDataURL(f);
+};
+$("removePhotoBtn").onclick=()=>{ if(!confirm("Remove profile photo?")) return; const a=getActiveStudent(); a.pic=""; saveActiveStudent(a); loadProfile(); };
+
+// Edit profile modal
+$("editProfileBtn").onclick=()=>{ const a=getActiveStudent(); $("editName").value=a.name; $("editEmail").value=a.email; $("editConfirmPass").value=""; $("editProfileModal").style.display="flex"; };
+$("cancelEdit").onclick=()=>$("editProfileModal").style.display="none";
+$("saveEdit").onclick=()=>{ const a=getActiveStudent(); const n=$("editName").value.trim(), e=$("editEmail").value.trim(), c=$("editConfirmPass").value.trim();
+  if(e!==a.email && c!==a.password) return alert("Password confirmation required to change email.");
+  a.name=n||a.name; a.email=e||a.email; saveActiveStudent(a); loadProfile(); $("editProfileModal").style.display="none"; alert("Profile updated. You will be logged out."); localStorage.removeItem("activeStudent"); location.href="login.html"; };
+
+// Password change
+$("changePasswordBtn").onclick=()=>$("passwordModal").style.display="flex";
+$("cancelPassword").onclick=()=>$("passwordModal").style.display="none";
+$("savePassword").onclick=()=>{ const a=getActiveStudent(); const o=$("oldPass").value.trim(), n=$("newPass").value.trim(), c=$("confirmPass").value.trim();
+  $("successMsg").style.display="none"; $("errorMsg").style.display="none";
+  if(o!==a.password) return $("errorMsg").textContent="❌ Old password incorrect", $("errorMsg").style.display="block";
+  if(n!==c) return $("errorMsg").textContent="❌ New passwords do not match", $("errorMsg").style.display="block";
+  if(n.length<6||n.length>12) return $("errorMsg").textContent="❌ Password must be 6-12 characters", $("errorMsg").style.display="block";
+  a.password=n; saveActiveStudent(a); $("successMsg").style.display="block"; setTimeout(()=>{ alert("Password updated. Logging out..."); localStorage.removeItem("activeStudent"); location.href="login.html"; },800);
 };
 
-$("removePhotoBtn").onclick = () => {
-    if(!confirm("Remove profile photo?")) return;
-    const active = getActiveStudent();
-    if(!active) return;
-    active.pic = "";
-    saveActiveStudent(active);
-    loadProfile();
-};
+// Announcements
+function loadAnnouncements(){ const anns=JSON.parse(localStorage.getItem("announcements")||"[]"); $("annList").innerHTML=anns.length?anns.map(a=>`<div style="margin-bottom:12px;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fafafa;"><strong>${a.title}</strong><br><small>${a.date}</small><p>${a.desc}</p></div>`).join(""):"<p>No announcements yet.</p>"; }
 
-// --- Edit Profile Modal ---
-const editModal = $("editProfileModal");
-$("editProfileBtn").onclick = () => {
-    const active = getActiveStudent();
-    $("editName").value = active.name || "";
-    $("editEmail").value = active.email || "";
-    $("editConfirmPass").value = "";
-    editModal.style.display = "flex";
-};
-$("cancelEdit").onclick = () => editModal.style.display = "none";
-$("saveEdit").onclick = () => {
-    const active = getActiveStudent();
-    const newName = $("editName").value.trim();
-    const newEmail = $("editEmail").value.trim();
-    const confirmPass = $("editConfirmPass").value.trim();
+// Logout
+$("logoutLink").onclick=e=>{e.preventDefault(); localStorage.removeItem("activeStudent"); location.href="login.html";};
 
-    if(newEmail !== active.email && confirmPass !== active.password){
-        alert("Password confirmation required to change email."); return;
-    }
-
-    active.name = newName || active.name;
-    active.email = newEmail || active.email;
-    saveActiveStudent(active);
-    loadProfile();
-    editModal.style.display = "none";
-
-    alert("Profile updated. You will be logged out for security.");
-    localStorage.removeItem("activeStudent");
-    location.href = "login.html";
-};
-
-// --- Change Password Modal ---
-const passModal = $("passwordModal");
-$("changePasswordBtn").onclick = () => passModal.style.display = "flex";
-$("cancelPassword").onclick = () => passModal.style.display = "none";
-
-$("savePassword").onclick = () => {
-    const active = getActiveStudent();
-    const oldPass = $("oldPass").value.trim();
-    const newPass = $("newPass").value.trim();
-    const confirmPass = $("confirmPass").value.trim();
-
-    $("successMsg").style.display = "none"; 
-    $("errorMsg").style.display = "none";
-
-    if(oldPass !== active.password){
-        $("errorMsg").innerText = "❌ Old password is incorrect";
-        $("errorMsg").style.display = "block"; return;
-    }
-    if(newPass !== confirmPass){
-        $("errorMsg").innerText = "❌ New passwords do not match";
-        $("errorMsg").style.display = "block"; return;
-    }
-    if(newPass.length < 6 || newPass.length > 12){
-        $("errorMsg").innerText = "❌ Password must be 6-12 characters";
-        $("errorMsg").style.display = "block"; return;
-    }
-
-    active.password = newPass;
-    saveActiveStudent(active);
-    $("successMsg").style.display = "block";
-
-    setTimeout(() => {
-        alert("Password updated. You will be logged out for security.");
-        localStorage.removeItem("activeStudent");
-        location.href = "login.html";
-    }, 800);
-};
-
-// --- Announcements ---
-function loadAnnouncements(){
-    const annList = $("annList");
-    const anns = JSON.parse(localStorage.getItem("announcements") || "[]");
-    if(anns.length === 0){ annList.innerHTML = "<p>No announcements at the moment.</p>"; return; }
-    annList.innerHTML = anns.map(a => `
-        <div style="margin-bottom:12px;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fafafa;">
-            <strong>${a.title}</strong><br>
-            <small>${a.date}</small>
-            <p>${a.desc}</p>
-        </div>
-    `).join("");
-}
-
-// --- Logout ---
-$("logoutLink").onclick = e => { e.preventDefault(); localStorage.removeItem("activeStudent"); location.href = "login.html"; };
-
-// --- Initialize ---
-loadProfile();
-loadAnnouncements();
-
+// Init
+loadProfile(); loadAnnouncements();
 </script>
 </body>
 </html>
